@@ -146,7 +146,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 2.0_demo
+  bundleVersion: 2.0.3_demo
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -168,7 +168,8 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Standalone: com.DefaultCompany.RPO---That-s-how-it-all-was
+    Android: com.RPOcommunity.RPOThatshowitallwas
+    Standalone: com.RPO-community.RPO---That-s-how-it-all-was
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -677,6 +678,7 @@ PlayerSettings:
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
+    Android: 1
     Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
