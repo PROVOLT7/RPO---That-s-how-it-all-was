@@ -8,13 +8,17 @@ public class GameProgress
     public int currentChapter = 0;
     public int currentDialogueIndex = 0;
     public string currentSceneName = "";
-    public List<bool> unlockedChapters = new List<bool> { true };
+    public List<bool> unlockedChapters = new List<bool> { true }; // Только глава 1 открыта
+    public List<bool> completedChapters = new List<bool>(); // Какие главы пройдены
 }
 
 public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance;
     public GameProgress currentProgress;
+
+    [Header("Chapter Settings")]
+    public int dialoguesPerChapter = 10; // Сколько диалогов в каждой главе
 
     void Awake()
     {
@@ -33,8 +37,6 @@ public class SaveSystem : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Scene loaded: {scene.name}");
-        
         if (!scene.name.Contains("Menu"))
         {
             currentProgress.currentSceneName = scene.name;
@@ -46,19 +48,39 @@ public class SaveSystem : MonoBehaviour
     {
         currentProgress.currentChapter = chapter;
         currentProgress.currentDialogueIndex = dialogueIndex;
-        
+
         if (!string.IsNullOrEmpty(sceneName))
         {
             currentProgress.currentSceneName = sceneName;
         }
-        
-        if (chapter < currentProgress.unlockedChapters.Count - 1)
+
+        // ПРОВЕРЯЕМ ЗАВЕРШЕНИЕ ГЛАВЫ
+        if (dialogueIndex >= dialoguesPerChapter)
         {
-            currentProgress.unlockedChapters[chapter + 1] = true;
+            MarkChapterCompleted(chapter);
+            Debug.Log($"Chapter {chapter} completed!");
         }
-        
+
         SaveToPlayerPrefs();
-        Debug.Log($"Game saved: Chapter {chapter}, Dialogue {dialogueIndex}, Scene: {currentProgress.currentSceneName}");
+        Debug.Log($"Game saved: Chapter {chapter}, Dialogue {dialogueIndex}/{dialoguesPerChapter}");
+    }
+
+    // НОВЫЙ МЕТОД: отмечаем главу как завершенную и открываем следующую
+    void MarkChapterCompleted(int chapter)
+    {
+        // Отмечаем текущую главу как завершенную
+        if (chapter < currentProgress.completedChapters.Count)
+        {
+            currentProgress.completedChapters[chapter] = true;
+        }
+
+        // Открываем следующую главу
+        int nextChapter = chapter + 1;
+        if (nextChapter < currentProgress.unlockedChapters.Count)
+        {
+            currentProgress.unlockedChapters[nextChapter] = true;
+            Debug.Log($"Chapter {nextChapter} unlocked!");
+        }
     }
 
     void SaveToPlayerPrefs()
@@ -71,7 +93,7 @@ public class SaveSystem : MonoBehaviour
     public void LoadProgress()
     {
         string json = PlayerPrefs.GetString("NovelProgress", "");
-        
+
         if (!string.IsNullOrEmpty(json))
         {
             currentProgress = JsonUtility.FromJson<GameProgress>(json);
@@ -79,9 +101,11 @@ public class SaveSystem : MonoBehaviour
         else
         {
             currentProgress = new GameProgress();
-            for (int i = 0; i < 10; i++)
+            // Инициализируем 4 главы
+            for (int i = 0; i < 4; i++)
             {
-                currentProgress.unlockedChapters.Add(i == 0);
+                currentProgress.unlockedChapters.Add(i == 0); // Только глава 0 открыта
+                currentProgress.completedChapters.Add(false); // Ни одна не завершена
             }
         }
     }
@@ -89,9 +113,10 @@ public class SaveSystem : MonoBehaviour
     public void ResetProgress()
     {
         currentProgress = new GameProgress();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 4; i++)
         {
             currentProgress.unlockedChapters.Add(i == 0);
+            currentProgress.completedChapters.Add(false);
         }
         PlayerPrefs.DeleteKey("NovelProgress");
         PlayerPrefs.Save();
@@ -100,16 +125,19 @@ public class SaveSystem : MonoBehaviour
 
     public bool IsChapterUnlocked(int chapterIndex)
     {
-        if (chapterIndex < currentProgress.unlockedChapters.Count)
-        {
-            return currentProgress.unlockedChapters[chapterIndex];
-        }
-        return false;
+        return chapterIndex < currentProgress.unlockedChapters.Count &&
+               currentProgress.unlockedChapters[chapterIndex];
+    }
+
+    public bool IsChapterCompleted(int chapterIndex)
+    {
+        return chapterIndex < currentProgress.completedChapters.Count &&
+               currentProgress.completedChapters[chapterIndex];
     }
 
     public bool HasSaveGame()
     {
-        return currentProgress.currentDialogueIndex > 0 && 
+        return currentProgress.currentDialogueIndex > 0 &&
                !string.IsNullOrEmpty(currentProgress.currentSceneName);
     }
 
@@ -118,10 +146,6 @@ public class SaveSystem : MonoBehaviour
         if (HasSaveGame() && !string.IsNullOrEmpty(currentProgress.currentSceneName))
         {
             SceneManager.LoadScene(currentProgress.currentSceneName);
-        }
-        else
-        {
-            Debug.LogError("No saved scene found!");
         }
     }
 

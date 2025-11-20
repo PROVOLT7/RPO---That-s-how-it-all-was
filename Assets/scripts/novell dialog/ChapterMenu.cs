@@ -7,11 +7,11 @@ public class ChapterMenu : MonoBehaviour
 {
     [Header("Chapter Settings")]
     [SerializeField] private ChapterButton[] chapterButtons;
-    
+
     [Header("UI References")]
     [SerializeField] private Button continueButton;
     [SerializeField] private GameObject chapterSelectionPanel;
-    [SerializeField] private GameObject overwriteWarningPanel; // Панель подтверждения
+    [SerializeField] private GameObject overwriteWarningPanel;
 
     [Header("Warning Panel Elements")]
     [SerializeField] private TextMeshProUGUI warningText;
@@ -20,7 +20,7 @@ public class ChapterMenu : MonoBehaviour
 
     [Header("Scene Names")]
     [SerializeField] private string[] chapterScenes;
-    [SerializeField] private string dialogueSceneName = "DialogueScene"; // Сцена с диалогами
+    [SerializeField] private string dialogueSceneName = "DialogueScene";
 
     private int selectedChapterIndex = -1;
 
@@ -28,11 +28,10 @@ public class ChapterMenu : MonoBehaviour
     {
         UpdateChapterMenu();
         continueButton.onClick.AddListener(OnContinueButtonClicked);
-        
-        // Настраиваем кнопки подтверждения
+
         confirmButton.onClick.AddListener(OnConfirmOverwrite);
         cancelButton.onClick.AddListener(OnCancelOverwrite);
-        
+
         HideOverwriteWarning();
     }
 
@@ -57,7 +56,8 @@ public class ChapterMenu : MonoBehaviour
         }
     }
 
-    void OnContinueButtonClicked()
+    // ИЗМЕНЕНО: метод теперь public
+    public void OnContinueButtonClicked()
     {
         Debug.Log($"Continuing from saved position");
         SaveSystem.Instance.LoadSavedScene();
@@ -68,7 +68,6 @@ public class ChapterMenu : MonoBehaviour
     {
         if (SaveSystem.Instance.IsChapterUnlocked(chapterIndex))
         {
-            // Если есть активное сохранение - показываем предупреждение
             if (SaveSystem.Instance.HasSaveGame() && chapterIndex != SaveSystem.Instance.currentProgress.currentChapter)
             {
                 ShowOverwriteWarning(chapterIndex);
@@ -88,10 +87,10 @@ public class ChapterMenu : MonoBehaviour
     {
         selectedChapterIndex = chapterIndex;
         overwriteWarningPanel.SetActive(true);
-        
+
         string currentChapter = $"Текущий прогресс: Глава {SaveSystem.Instance.currentProgress.currentChapter + 1}";
         string warningMessage = $"Вы собираетесь начать Главу {chapterIndex + 1} с начала.\n{currentChapter}\n\nВесь текущий прогресс будет потерян!\n\nПродолжить?";
-        
+
         warningText.text = warningMessage;
     }
 
@@ -118,11 +117,10 @@ public class ChapterMenu : MonoBehaviour
     void LoadChapterDirectly(int chapterIndex)
     {
         Debug.Log($"Starting Chapter {chapterIndex}");
-        
-        // Сохраняем прогресс и загружаем диалоговую сцену
+
         SaveSystem.Instance.SaveGame(chapterIndex, 0, dialogueSceneName);
         SceneManager.LoadScene(dialogueSceneName);
-        
+
         HideChapterMenu();
     }
 }

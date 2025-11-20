@@ -6,25 +6,34 @@ public class ChapterButton : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Button button;
-    [SerializeField] private TextMeshProUGUI chapterText;
-    [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Image lockIcon;
     [SerializeField] private Image completedIcon;
-
-    [Header("Settings")]
-    [SerializeField] private string chapterName = "Chapter";
-    [SerializeField] private Color unlockedColor = Color.white;
-    [SerializeField] private Color lockedColor = Color.gray;
+    [SerializeField] private TextMeshProUGUI statusText; // Добавили статус текст
 
     public void UpdateButtonState(int chapterIndex)
     {
         bool isUnlocked = SaveSystem.Instance.IsChapterUnlocked(chapterIndex);
-        bool isCompleted = chapterIndex < SaveSystem.Instance.currentProgress.currentChapter;
+        bool isCompleted = SaveSystem.Instance.IsChapterCompleted(chapterIndex);
 
+        Debug.Log($"Chapter {chapterIndex}: Unlocked={isUnlocked}, Completed={isCompleted}");
+
+        // Управляем кнопкой
         button.interactable = isUnlocked;
-        chapterText.text = $"{chapterName} {chapterIndex + 1}";
-        chapterText.color = isUnlocked ? unlockedColor : lockedColor;
 
+        // Управляем замком
+        if (lockIcon != null)
+        {
+            lockIcon.gameObject.SetActive(!isUnlocked);
+            Debug.Log($"Lock icon for chapter {chapterIndex}: {!isUnlocked}");
+        }
+
+        // Управляем галочкой завершения
+        if (completedIcon != null)
+        {
+            completedIcon.gameObject.SetActive(isCompleted);
+        }
+
+        // Обновляем текст статуса
         if (statusText != null)
         {
             if (isCompleted)
@@ -35,26 +44,28 @@ public class ChapterButton : MonoBehaviour
             else if (isUnlocked)
             {
                 statusText.text = "Доступна";
-                statusText.color = unlockedColor;
+                statusText.color = Color.white;
             }
             else
             {
                 statusText.text = "Заблокирована";
-                statusText.color = lockedColor;
+                statusText.color = Color.gray;
             }
         }
 
-        if (lockIcon != null)
-        {
-            lockIcon.gameObject.SetActive(!isUnlocked);
-        }
-
-        if (completedIcon != null)
-        {
-            completedIcon.gameObject.SetActive(isCompleted);
-        }
-
+        // Назначаем обработчик клика
         button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => FindObjectOfType<ChapterMenu>().StartChapter(chapterIndex));
+        button.onClick.AddListener(() => OnChapterButtonClicked(chapterIndex));
+    }
+
+    void OnChapterButtonClicked(int chapterIndex)
+    {
+        Debug.Log($"Chapter button {chapterIndex} clicked!");
+
+        ChapterMenu chapterMenu = FindObjectOfType<ChapterMenu>();
+        if (chapterMenu != null)
+        {
+            chapterMenu.StartChapter(chapterIndex);
+        }
     }
 }
